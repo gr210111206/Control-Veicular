@@ -23,5 +23,7 @@ namespace ControlVeicular.API.Models
         public string? Destino { get; set; }
         public string? Motivo { get; set; }
         public string? EvidenciaUrl { get; set; }
+        public string? Notas { get; set; }
+        public List<string>? Pasajeros { get; set; }
     }
 }

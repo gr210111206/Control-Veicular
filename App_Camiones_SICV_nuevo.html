@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0b">
+<title>TSJ El Grullo — Gestión de Flotilla Estudiantil</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --surface: #131316;
+    --surface-2: #1a1a1f;
+    --surface-3: #222228;
+    --border: #26262d;
+    --border-strong: #34343c;
+    --text: #f5f5f7;
+    --text-dim: #8a8a93;
+    --text-faint: #5a5a63;
+    --accent: #ffb627;
+    --accent-glow: rgba(255, 182, 39, 0.18);
+    --green: #4ade80;
+    --yellow: #facc15;
+    --red: #f43f5e;
+    --blue: #60a5fa;
+  }
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; min-height: 100vh; }
+  .display { font-family: 'Bricolage Grotesque', sans-serif; letter-spacing: -0.025em; }
+  .mono-num { font-variant-numeric: tabular-nums; }
+
+  /* === Backgrounds === */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(255,182,39,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,182,39,0.045) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .radial-fade {
+    background: radial-gradient(ellipse 80% 60% at 50% 40%, transparent 0%, var(--bg) 75%);
+  }
+
+  /* === Buttons === */
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0a0b;
+    font-weight: 700;
+    border-radius: 12px;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+    box-shadow: 0 0 0 0 var(--accent-glow);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 32px var(--accent-glow), 0 0 0 1px rgba(255,182,39,0.4); }
+  .btn-primary:active { transform: translateY(0) scale(0.97); }
+
+  .btn-ghost {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 12px;
+    transition: all 0.15s ease;
+  }
+  .btn-ghost:hover { border-color: var(--border-strong); background: var(--surface-2); }
+  .btn-ghost:active { transform: scale(0.97); }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #f43f5e, #e11d48);
+    color: white;
+    font-weight: 700;
+    border-radius: 12px;
+    transition: all 0.15s ease;
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+  }
+  .btn-danger:hover { transform: translateY(-1px); box-shadow: 0 10px 32px rgba(244, 63, 94, 0.35); }
+  .btn-danger:active { transform: scale(0.97); }
+
+  .btn-success {
+    background: linear-gradient(135deg, #4ade80, #16a34a);
+    color: #0a0a0b;
+    font-weight: 700;
+    border-radius: 12px;
+    transition: all 0.15s ease;
+  }
+  .btn-success:hover { transform: translateY(-1px); box-shadow: 0 10px 32px rgba(74, 222, 128, 0.3); }
+  .btn-success:active { transform: scale(0.97); }
+
+  /* === Cards === */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .card-hover { cursor: pointer; }
+  .card-hover:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+
+  /* === Status indicators (semáforo) === */
+  .dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
+  @keyframes pulse-g { 0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); } 50% { box-shadow: 0 0 0 8px rgba(74,222,128,0); } }
+  @keyframes pulse-y { 0%,100% { box-shadow: 0 0 0 0 rgba(250,204,21,0.5); } 50% { box-shadow: 0 0 0 8px rgba(250,204,21,0); } }
+  @keyframes pulse-r { 0%,100% { box-shadow: 0 0 0 0 rgba(244,63,94,0.6); } 50% { box-shadow: 0 0 0 10px rgba(244,63,94,0); } }
+  .dot-green { background: var(--green); animation: pulse-g 2s ease-in-out infinite; }
+  .dot-yellow { background: var(--yellow); animation: pulse-y 2s ease-in-out infinite; }
+  .dot-red { background: var(--red); animation: pulse-r 1.5s ease-in-out infinite; }
+
+  /* Big traffic light */
+  .tl { width: 24px; height: 24px; border-radius: 999px; }
+  .tl-green { background: radial-gradient(circle at 35% 30%, #86efac, #16a34a); box-shadow: 0 0 20px rgba(74,222,128,0.5), inset 0 -2px 4px rgba(0,0,0,0.3); }
+  .tl-yellow { background: radial-gradient(circle at 35% 30%, #fde047, #ca8a04); box-shadow: 0 0 20px rgba(250,204,21,0.5), inset 0 -2px 4px rgba(0,0,0,0.3); }
+  .tl-red { background: radial-gradient(circle at 35% 30%, #fda4af, #be123c); box-shadow: 0 0 20px rgba(244,63,94,0.5), inset 0 -2px 4px rgba(0,0,0,0.3); }
+  .tl-off { background: var(--surface-3); }
+
+  /* === Chips === */
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+  .chip-green { background: rgba(74,222,128,0.12); color: #86efac; }
+  .chip-yellow { background: rgba(250,204,21,0.14); color: #fde047; }
+  .chip-red { background: rgba(244,63,94,0.14); color: #fda4af; }
+  .chip-blue { background: rgba(96,165,250,0.14); color: #93c5fd; }
+  .chip-amber { background: rgba(255,182,39,0.14); color: #fbbf24; }
+  .chip-neutral { background: var(--surface-2); color: var(--text-dim); border: 1px solid var(--border); }
+
+  /* === Navigation === */
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: 10px;
+    color: var(--text-dim);
+    transition: all 0.15s ease;
+    position: relative;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .nav-item:hover { background: var(--surface); color: var(--text); }
+  .nav-item.active { background: var(--surface-2); color: var(--text); }
+  .nav-item.active::before {
+    content: ''; position: absolute; left: -16px; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 60%; background: var(--accent); border-radius: 0 4px 4px 0;
+  }
+  .nav-item svg { flex-shrink: 0; }
+
+  /* === Inputs === */
+  .input, .select, .textarea {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 12px 14px;
+    transition: all 0.15s;
+    font-family: inherit;
+    font-size: 14px;
+    width: 100%;
+  }
+  .input:focus, .select:focus, .textarea:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .input::placeholder, .textarea::placeholder { color: var(--text-faint); }
+  .label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; letter-spacing: 0.03em; text-transform: uppercase; }
+
+  /* === Map === */
+  .map-area {
+    background:
+      radial-gradient(circle at 25% 35%, rgba(255,182,39,0.07), transparent 50%),
+      radial-gradient(circle at 75% 65%, rgba(96,165,250,0.06), transparent 55%),
+      var(--surface-2);
+    position: relative; overflow: hidden;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+  }
+  .map-svg-bg {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* === Animations === */
+  @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  .slide-up { animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .s1{animation-delay:.04s}.s2{animation-delay:.08s}.s3{animation-delay:.12s}.s4{animation-delay:.16s}.s5{animation-delay:.20s}.s6{animation-delay:.24s}.s7{animation-delay:.28s}
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .fade-in { animation: fadeIn 0.3s ease both; }
+
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .modal-in { animation: modalIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 1s linear infinite; }
+
+  @keyframes dash { to { stroke-dashoffset: -100; } }
+  .route-path { stroke-dasharray: 8 6; animation: dash 2s linear infinite; }
+
+  @keyframes blink { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+  .d1{animation: blink 1.4s infinite}.d2{animation: blink 1.4s infinite .2s}.d3{animation: blink 1.4s infinite .4s}
+
+  @keyframes pin-drop { 0% { transform: translateY(-20px); opacity: 0; } 60% { transform: translateY(2px); } 100% { transform: translateY(0); opacity: 1; } }
+  .pin-drop { animation: pin-drop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  @keyframes drive { from { transform: translateX(-150px); } to { transform: translateX(calc(100vw + 150px)); } }
+  .bus-drive { animation: drive 30s linear infinite; }
+
+  /* === Progress bar === */
+  .progress-bar { height: 8px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 999px; transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+
+  /* === Tabs === */
+  .tab { padding: 10px 4px; color: var(--text-dim); font-weight: 600; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.15s; cursor: pointer; }
+  .tab.active { color: var(--text); border-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  /* === Scrollbar === */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+  /* === Sidebar mobile === */
+  .sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+  @media (max-width: 1023px) {
+    .sidebar { position: fixed; z-index: 60; transform: translateX(-100%); top: 0; left: 0; height: 100dvh; }
+    .sidebar.open { transform: translateX(0); }
+  }
+
+  /* === Calendar === */
+  .cal-cell {
+    aspect-ratio: 1; border-radius: 8px; padding: 6px;
+    background: var(--surface-2); border: 1px solid transparent;
+    display: flex; flex-direction: column; gap: 2px;
+    transition: all 0.15s; cursor: pointer;
+    position: relative; overflow: hidden;
+  }
+  .cal-cell:hover { border-color: var(--border-strong); }
+  .cal-cell.has-event { border-color: var(--border); }
+  .cal-cell.today { background: rgba(255,182,39,0.08); border-color: var(--accent); }
+  .cal-cell.other-month { opacity: 0.3; }
+
+  /* === Photo upload === */
+  .photo-slot {
+    aspect-ratio: 1; border: 1.5px dashed var(--border-strong); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; cursor: pointer;
+    background: var(--surface-2);
+  }
+  .photo-slot:hover { border-color: var(--accent); background: rgba(255,182,39,0.05); }
+  .photo-slot.filled { border-style: solid; border-color: var(--border); background: linear-gradient(135deg, rgba(255,182,39,0.1), rgba(96,165,250,0.05)); }
+
+  /* === Range slider track === */
+  input[type=range] { -webkit-appearance: none; background: transparent; }
+  input[type=range]::-webkit-slider-runnable-track { height: 6px; background: var(--surface-3); border-radius: 999px; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; background: var(--accent); border-radius: 999px; margin-top: -6px; cursor: pointer; box-shadow: 0 0 0 4px var(--accent-glow); }
+
+  /* === Toast === */
+  @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .toast { animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  /* Hide scrollbar on mobile nav */
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .scrollbar-none { scrollbar-width: none; }
+
+  /* utility */
+  .hide { display: none !important; }
+</style>
+</head>
+<body class="min-h-screen overflow-x-hidden">
+
+<!-- =============================================================== -->
+<!-- LOGIN SCREEN -->
+<!-- =============================================================== -->
+<div id="login-screen" class="min-h-[100dvh] flex items-center justify-center grid-bg relative overflow-hidden">
+  <div class="absolute inset-0 radial-fade pointer-events-none"></div>
+
+  <!-- Floating buses background -->
+  <svg class="absolute bottom-16 bus-drive opacity-15 pointer-events-none" width="100" height="50" viewBox="0 0 100 50" fill="none">
+    <rect x="6" y="10" width="78" height="28" rx="5" fill="#ffb627"/>
+    <rect x="10" y="14" width="10" height="10" fill="#0a0a0b"/>
+    <rect x="24" y="14" width="10" height="10" fill="#0a0a0b"/>
+    <rect x="38" y="14" width="10" height="10" fill="#0a0a0b"/>
+    <rect x="52" y="14" width="10" height="10" fill="#0a0a0b"/>
+    <rect x="66" y="14" width="14" height="10" fill="#0a0a0b"/>
+    <circle cx="20" cy="40" r="6" fill="#26262c" stroke="#f5f5f7" stroke-width="1.5"/>
+    <circle cx="68" cy="40" r="6" fill="#26262c" stroke="#f5f5f7" stroke-width="1.5"/>
+  </svg>
+  <svg class="absolute bottom-32 bus-drive opacity-10 pointer-events-none" style="animation-delay:-12s; animation-duration: 40s" width="80" height="40" viewBox="0 0 100 50" fill="none">
+    <rect x="6" y="10" width="78" height="28" rx="5" fill="#60a5fa"/>
+    <rect x="10" y="14" width="10" height="10" fill="#0a0a0b"/>
+    <rect x="24" y="14" width="10" height="10" fill="#0a0a0b"/>
+    <rect x="38" y="14" width="10" height="10" fill="#0a0a0b"/>
+    <circle cx="20" cy="40" r="6" fill="#26262c"/>
+    <circle cx="68" cy="40" r="6" fill="#26262c"/>
+  </svg>
+
+  <div class="relative w-full max-w-md px-6 z-10">
+    <div class="text-center mb-10 slide-up">
+      <div class="inline-flex items-center gap-2.5 mb-8">
+        <div class="w-11 h-11 rounded-xl bg-amber-400 flex items-center justify-center shadow-lg shadow-amber-400/30">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M3 17V7a2 2 0 012-2h14a2 2 0 012 2v10M3 17v2a1 1 0 001 1h2a1 1 0 001-1v-2M3 17h18M17 17v2a1 1 0 001 1h2a1 1 0 001-1v-2M21 17V7M7 11h10M5 14h.01M19 14h.01" stroke="#0a0a0b" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="display text-2xl font-extrabold">TSJ El Grullo</span>
+      </div>
+      <h1 class="display text-[44px] sm:text-5xl font-extrabold leading-[1.02] mb-4">
+        SICV,<br>TSJ <span class="text-amber-400">El Grullo</span>.
+      </h1>
+      <p class="text-[var(--text-dim)] text-[15px] max-w-sm mx-auto">Bitácora digital, semáforo de salud, estimaciones con IA y trazabilidad completa para el transporte estudiantil.</p>
+    </div>
+
+    <div class="card p-7 slide-up s2">
+      <button onclick="enterApp()" class="w-full bg-white text-[#0a0a0b] font-semibold py-3.5 px-4 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-100 transition active:scale-[0.98]">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continuar con Google
+      </button>
+      <div class="flex items-center gap-3 my-5">
+        <div class="flex-1 h-px bg-[var(--border)]"></div>
+        <span class="text-xs text-[var(--text-faint)]">o</span>
+        <div class="flex-1 h-px bg-[var(--border)]"></div>
+      </div>
+      <button onclick="enterApp()" class="w-full btn-ghost py-3 text-sm font-semibold">Entrar como invitado (demo)</button>
+      <p class="text-[11px] text-[var(--text-faint)] text-center mt-5">Al continuar aceptas los términos. Solo personal autorizado de la institución.</p>
+    </div>
+
+    <div class="flex items-center justify-center gap-6 mt-8 text-xs text-[var(--text-faint)] slide-up s3">
+      <span class="flex items-center gap-1.5"><div class="dot dot-green"></div>15 unidades</span>
+      <span class="flex items-center gap-1.5"><div class="dot dot-yellow"></div>3 en taller</span>
+      <span class="flex items-center gap-1.5"><div class="dot dot-red"></div>1 alerta</span>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================================== -->
+<!-- MAIN APP -->
+<!-- =============================================================== -->
+<div id="app" class="hide min-h-[100dvh] lg:flex">
+
+  <!-- Mobile overlay -->
+  <div id="sidebar-overlay" onclick="toggleSidebar()" class="hide fixed inset-0 bg-black/60 z-50 backdrop-blur-sm"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-[260px] shrink-0 border-r border-[var(--border)] bg-[var(--bg)] p-4 flex flex-col">
+    <div class="flex items-center justify-between mb-6 px-2 pt-2">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-lg bg-amber-400 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 17V7a2 2 0 012-2h14a2 2 0 012 2v10M3 17v2a1 1 0 001 1h2a1 1 0 001-1v-2M3 17h18M17 17v2a1 1 0 001 1h2a1 1 0 001-1v-2M21 17V7M7 11h10M5 14h.01M19 14h.01" stroke="#0a0a0b" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="display text-lg font-extrabold">TSJ El Grullo</span>
+      </div>
+      <button class="lg:hide btn-ghost !p-2 !rounded-lg" onclick="toggleSidebar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <nav class="flex flex-col gap-1 flex-1">
+      <div class="text-[10px] font-bold text-[var(--text-faint)] uppercase tracking-wider px-3 mb-2">Operación</div>
+      <a class="nav-item active" data-view="dashboard" onclick="navTo('dashboard')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" data-view="nuevo-viaje" onclick="navTo('nuevo-viaje')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Nuevo viaje
+      </a>
+      <a class="nav-item" data-view="bitacora-activa" onclick="navTo('bitacora-activa')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Bitácora activa
+        <span class="ml-auto chip chip-green !text-[9px] !px-2 !py-0.5">2</span>
+      </a>
+      <a class="nav-item" data-view="historico" onclick="navTo('historico')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 6-6"/></svg>
+        Histórico
+      </a>
+
+      <div class="text-[10px] font-bold text-[var(--text-faint)] uppercase tracking-wider px-3 mb-2 mt-5">Flotilla</div>
+      <a class="nav-item" data-view="mantenimiento" onclick="navTo('mantenimiento')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        Mantenimiento
+        <span class="ml-auto chip chip-yellow !text-[9px] !px-2 !py-0.5">3</span>
+      </a>
+      <a class="nav-item" data-view="calendario" onclick="navTo('calendario')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Calendario
+      </a>
+      <a class="nav-item" data-view="emergencias" onclick="navTo('emergencias')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Emergencias
+        <span class="ml-auto chip chip-red !text-[9px] !px-2 !py-0.5">1</span>
+      </a>
+    </nav>
+
+    <!-- Weekly budget mini card -->
+    <div class="card p-4 mb-3">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs text-[var(--text-dim)] font-semibold">Presupuesto semanal</span>
+        <span class="chip chip-yellow">68%</span>
+      </div>
+      <div class="progress-bar mb-2">
+        <div class="progress-fill" style="width: 68%; background: linear-gradient(90deg, var(--accent), #f59e0b);"></div>
+      </div>
+      <div class="text-xs text-[var(--text-dim)]"><span class="text-white font-bold mono-num">$8,420</span> / $12,400 MXN</div>
+    </div>
+
+    <!-- User -->
+    <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--surface)] transition cursor-pointer">
+      <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-[#0a0a0b] font-bold text-sm">AM</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-semibold truncate">Andrés M.</div>
+        <div class="text-[11px] text-[var(--text-dim)] truncate">Coordinador</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[var(--text-dim)]"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 min-w-0">
+
+    <!-- Mobile header -->
+    <header class="lg:hide sticky top-0 z-40 bg-[var(--bg)]/95 backdrop-blur-md border-b border-[var(--border)] px-4 py-3 flex items-center justify-between">
+      <button class="btn-ghost !p-2 !rounded-lg" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-md bg-amber-400 flex items-center justify-center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 17V7a2 2 0 012-2h14a2 2 0 012 2v10M7 11h10" stroke="#0a0a0b" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
+        <span class="display font-extrabold">TSJ El Grullo</span>
+      </div>
+      <button onclick="openModal('emergency')" class="btn-danger !p-2 !rounded-lg">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </button>
+    </header>
+
+    <!-- ============= DASHBOARD VIEW ============= -->
+    <section id="view-dashboard" class="view p-5 lg:p-8 max-w-[1400px] mx-auto">
+      <div class="flex items-start justify-between mb-7 slide-up">
+        <div>
+          <div class="text-sm text-[var(--text-dim)] mb-1">Jueves, 21 de mayo</div>
+          <h1 class="display text-3xl lg:text-4xl font-extrabold">Buen día, Andrés.</h1>
+        </div>
+        <div class="hidden md:flex items-center gap-2">
+          <button onclick="openModal('emergency')" class="btn-danger px-4 py-2.5 text-sm flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Emergencia
+          </button>
+          <button onclick="navTo('nuevo-viaje')" class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Nuevo viaje
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
+        <div class="card p-5 slide-up s1">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs text-[var(--text-dim)] font-semibold uppercase tracking-wide">Unidades</span>
+            <div class="w-8 h-8 rounded-lg bg-amber-400/10 flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M3 17V7a2 2 0 012-2h14a2 2 0 012 2v10M3 17h18M7 11h10"/></svg>
+            </div>
+          </div>
+          <div class="display text-4xl font-extrabold mono-num">15</div>
+          <div class="flex items-center gap-3 mt-2 text-[11px]">
+            <span class="flex items-center gap-1 text-[var(--text-dim)]"><div class="dot dot-green"></div>11 ok</span>
+            <span class="flex items-center gap-1 text-[var(--text-dim)]"><div class="dot dot-yellow"></div>3</span>
+            <span class="flex items-center gap-1 text-[var(--text-dim)]"><div class="dot dot-red"></div>1</span>
+          </div>
+        </div>
+
+        <div class="card p-5 slide-up s2">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs text-[var(--text-dim)] font-semibold uppercase tracking-wide">Viajes hoy</span>
+            <div class="w-8 h-8 rounded-lg bg-blue-400/10 flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+          </div>
+          <div class="display text-4xl font-extrabold mono-num">8</div>
+          <div class="text-[11px] text-[var(--text-dim)] mt-2"><span class="text-green-400 font-semibold">↑ 2</span> vs ayer</div>
+        </div>
+
+        <div class="card p-5 slide-up s3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs text-[var(--text-dim)] font-semibold uppercase tracking-wide">Km recorridos</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-400/10 flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+          </div>
+          <div class="display text-4xl font-extrabold mono-num">412</div>
+          <div class="text-[11px] text-[var(--text-dim)] mt-2">Esta semana</div>
+        </div>
+
+        <div class="card p-5 slide-up s4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs text-[var(--text-dim)] font-semibold uppercase tracking-wide">Gasto gasolina</span>
+            <div class="w-8 h-8 rounded-lg bg-amber-400/10 flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><line x1="3" y1="22" x2="15" y2="22"/><line x1="4" y1="9" x2="14" y2="9"/><path d="M14 22V4a2 2 0 00-2-2H6a2 2 0 00-2 2v18M14 13h2a2 2 0 012 2v2a2 2 0 002 2 2 2 0 002-2V9.83a2 2 0 00-.59-1.42L18 5"/></svg>
+            </div>
+          </div>
+          <div class="display text-4xl font-extrabold mono-num">$8,420</div>
+          <div class="text-[11px] text-[var(--text-dim)] mt-2">68% del presupuesto</div>
+        </div>
+      </div>
+
+      <!-- Two column layout -->
+      <div class="grid lg:grid-cols-3 gap-4 lg:gap-6">
+
+        <!-- Fleet status -->
+        <div class="lg:col-span-2 card p-5 lg:p-6 slide-up s5">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="display text-xl font-bold">Estado de la flotilla</h2>
+              <p class="text-xs text-[var(--text-dim)] mt-0.5">Semáforo de salud por unidad</p>
+            </div>
+            <button onclick="navTo('mantenimiento')" class="text-xs text-[var(--text-dim)] hover:text-white transition flex items-center gap-1">
+              Ver todas <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+
+          <div class="space-y-2.5">
+            <!-- Vehicle row -->
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] transition cursor-pointer" onclick="openModal('vehicle-detail')">
+              <div class="w-10 h-10 rounded-lg bg-amber-400/10 flex items-center justify-center shrink-0">
+                <span class="display font-extrabold text-amber-400 text-sm">04</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm">TR-04 · Mercedes Sprinter</div>
+                <div class="text-[11px] text-[var(--text-dim)] mono-num">142,380 km · Último servicio hace 2,100 km</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="chip chip-green hidden sm:inline-flex">Operativo</span>
+                <div class="tl tl-green"></div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] transition cursor-pointer">
+              <div class="w-10 h-10 rounded-lg bg-amber-400/10 flex items-center justify-center shrink-0">
+                <span class="display font-extrabold text-amber-400 text-sm">07</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm">TR-07 · Toyota Hiace</div>
+                <div class="text-[11px] text-[var(--text-dim)] mono-num">89,210 km · Servicio próximo en 800 km</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="chip chip-yellow hidden sm:inline-flex">Pronto servicio</span>
+                <div class="tl tl-yellow"></div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] transition cursor-pointer">
+              <div class="w-10 h-10 rounded-lg bg-amber-400/10 flex items-center justify-center shrink-0">
+                <span class="display font-extrabold text-amber-400 text-sm">11</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm">TR-11 · Nissan Urvan</div>
+                <div class="text-[11px] text-[var(--text-dim)] mono-num">203,540 km · Frenos requieren atención</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="chip chip-red hidden sm:inline-flex">Detenido</span>
+                <div class="tl tl-red"></div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] transition cursor-pointer">
+              <div class="w-10 h-10 rounded-lg bg-amber-400/10 flex items-center justify-center shrink-0">
+                <span class="display font-extrabold text-amber-400 text-sm">02</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm">TR-02 · Ford Transit</div>
+                <div class="text-[11px] text-[var(--text-dim)] mono-num">67,900 km · Todo en orden</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="chip chip-green hidden sm:inline-flex">Operativo</span>
+                <div class="tl tl-green"></div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] transition cursor-pointer">
+              <div class="w-10 h-10 rounded-lg bg-amber-400/10 flex items-center justify-center shrink-0">
+                <span class="display font-extrabold text-amber-400 text-sm">09</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm">TR-09 · Mercedes Sprinter</div>
+                <div class="text-[11px] text-[var(--text-dim)] mono-num">118,440 km · Cambio de aceite pendiente</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="chip chip-yellow hidden sm:inline-flex">Atención</span>
+                <div class="tl tl-yellow"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="space-y-4 lg:space-y-6">
+
+          <!-- Active trips -->
+          <div class="card p-5 slide-up s6">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="display text-lg font-bold">En ruta ahora</h2>
+              <span class="chip chip-green"><div class="dot dot-green !w-1.5 !h-1.5"></div>En vivo</span>
+            </div>
+            <div class="space-y-3">
+              <div class="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="font-bold text-sm">TR-04 → CDMX</span>
+                  <span class="text-[11px] text-[var(--text-dim)] mono-num">14:32</span>
+                </div>
+                <div class="text-xs text-[var(--text-dim)] mb-3">Chofer: Roberto S.</div>
+                <div class="progress-bar mb-1.5">
+                  <div class="progress-fill" style="width: 62%; background: var(--accent);"></div>
+                </div>
+                <div class="flex justify-between text-[11px] text-[var(--text-dim)] mono-num">
+                  <span>132/213 km</span>
+                  <span>ETA 16:10</span>
+                </div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="font-bold text-sm">TR-02 → San Juan del Río</span>
+                  <span class="text-[11px] text-[var(--text-dim)] mono-num">15:05</span>
+                </div>
+                <div class="text-xs text-[var(--text-dim)] mb-3">Chofer: Laura M.</div>
+                <div class="progress-bar mb-1.5">
+                  <div class="progress-fill" style="width: 28%; background: var(--accent);"></div>
+                </div>
+                <div class="flex justify-between text-[11px] text-[var(--text-dim)] mono-num">
+                  <span>22/78 km</span>
+                  <span>ETA 16:25</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alerts -->
+          <div class="card p-5 slide-up s7">
+            <h2 class="display text-lg font-bold mb-4">Alertas pendientes</h2>
+            <div class="space-y-3">
+              <div class="flex gap-3 p-3 rounded-xl bg-rose-500/5 border border-rose-500/20">
+                <div class="w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                </div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">TR-11 fuera de servicio</div>
+                  <div class="text-[11px] text-[var(--text-dim)] mt-0.5">Frenos requieren cambio inmediato</div>
+                </div>
+              </div>
+              <div class="flex gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">Servicio TR-07 esta semana</div>
+                  <div class="text-[11px] text-[var(--text-dim)] mt-0.5">Vence en 800 km · Agendar antes del viernes</div>
+                </div>
+              </div>
+              <div class="flex gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+                </div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">Presupuesto al 68%</div>
+                  <div class="text-[11px] text-[var(--text-dim)] mt-0.5">Quedan 3 días de la semana</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============= NUEVO VIAJE VIEW ============= -->
+    <section id="view-nuevo-viaje" class="view hide p-5 lg:p-8 max-w-[1400px] mx-auto">
+      <div class="mb-6 slide-up">
+        <div class="text-sm text-[var(--text-dim)] mb-1">Programar</div>
+        <h1 class="display text-3xl lg:text-4xl font-extrabold">Nuevo viaje</h1>
+      </div>
+
+      <div class="grid lg:grid-cols-5 gap-5">
+        <!-- Form -->
+        <div class="lg:col-span-2 space-y-5 slide-up s1">
+          <div class="card p-5">
+            <label class="label">Unidad de transporte</label>
+            <select class="select" id="trip-vehicle" onchange="updateEstimate()">
+              <option value="TR-04">TR-04 · Mercedes Sprinter (rinde 8.5 km/L)</option>
+              <option value="TR-02">TR-02 · Ford Transit (rinde 9.2 km/L)</option>
+              <option value="TR-09">TR-09 · Mercedes Sprinter (rinde 8.1 km/L)</option>
+              <option value="TR-07">TR-07 · Toyota Hiace (rinde 10.4 km/L)</option>
+            </select>
+
+            <label class="label mt-4">Chofer asignado</label>
+            <select class="select" id="trip-driver">
+              <option value="">Cargando...</option>
+            </select>
+
+            <label class="label mt-4">Destino</label>
+            <div class="relative">
+              <input type="text" class="input pr-10" id="trip-destination" placeholder="Buscar dirección..." value="Universidad Anáhuac, Querétaro" oninput="updateEstimate()">
+              <svg class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+
+            <label class="label mt-4">Motivo de salida</label>
+            <select class="select" id="trip-reason">
+              <option>Práctica académica</option>
+              <option>Evento deportivo</option>
+              <option>Visita cultural</option>
+              <option>Servicio social</option>
+              <option>Otro</option>
+            </select>
+
+            <div class="grid grid-cols-2 gap-3 mt-4">
+              <div>
+                <label class="label">Fecha</label>
+                <input type="date" class="input" id="trip-date" value="2026-05-22">
+              </div>
+              <div>
+                <label class="label">Hora salida</label>
+                <input type="time" class="input" id="trip-time" value="08:00">
+              </div>
+            </div>
+
+            <label class="label mt-4">Notas (opcional)</label>
+            <textarea class="textarea" id="trip-notes" rows="3" placeholder="Información adicional para el chofer..."></textarea>
+          </div>
+
+          <!-- Scanner de pasajeros -->
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="display font-bold text-base">Pasajeros</h3>
+                <p class="text-xs text-[var(--text-dim)]">Escanea QR o código de barras del estudiante</p>
+              </div>
+              <span class="chip chip-blue"><span id="scanned-count">0</span> registrados</span>
+            </div>
+            <div class="relative mb-3">
+              <input
+                type="text" id="scan-input" class="input pr-24"
+                placeholder="Número de control o escanea..."
+                onkeydown="onScanInput(event)" autocomplete="off" spellcheck="false"
+              >
+              <button
+                onclick="startCamera()"
+                class="absolute right-2 top-1/2 -translate-y-1/2 btn-ghost !py-1.5 !px-3 !rounded-lg flex items-center gap-1.5 text-xs"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Cámara
+              </button>
+            </div>
+            <div id="scan-error" class="hide text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2 mb-3"></div>
+            <div id="scanned-list" class="space-y-2 max-h-52 overflow-y-auto scrollbar-none">
+              <div class="text-center py-5 text-[var(--text-faint)] text-xs">Sin pasajeros registrados aún</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map + estimate -->
+        <div class="lg:col-span-3 space-y-5 slide-up s2">
+          <!-- Mock map -->
+          <div class="card overflow-hidden">
+            <div class="map-area map-svg-bg" style="height: 360px;">
+              <svg viewBox="0 0 500 360" class="w-full h-full">
+                <!-- Roads -->
+                <path d="M -20 120 Q 100 100 200 140 T 520 180" stroke="#34343c" stroke-width="3" fill="none"/>
+                <path d="M -20 240 Q 120 220 250 250 T 520 280" stroke="#34343c" stroke-width="3" fill="none"/>
+                <path d="M 80 -20 Q 100 80 90 180 T 110 380" stroke="#34343c" stroke-width="3" fill="none"/>
+                <path d="M 280 -20 Q 300 100 290 200 T 310 380" stroke="#34343c" stroke-width="3" fill="none"/>
+                <path d="M 420 -20 Q 410 120 430 240 T 420 380" stroke="#34343c" stroke-width="3" fill="none"/>
+                <!-- Animated route -->
+                <path d="M 90 280 Q 180 240 240 200 T 380 100" stroke="#ffb627" stroke-width="3.5" fill="none" class="route-path"/>
+                <!-- Origin pin -->
+                <g class="pin-drop">
+                  <circle cx="90" cy="280" r="14" fill="#ffb627"/>
+                  <circle cx="90" cy="280" r="6" fill="#0a0a0b"/>
+                  <text x="90" y="312" fill="#fbbf24" font-size="11" font-weight="700" text-anchor="middle" font-family="Plus Jakarta Sans">Origen</text>
+                </g>
+                <!-- Destination pin -->
+                <g class="pin-drop" style="animation-delay: 0.3s">
+                  <path d="M 380 100 L 380 70 L 380 100 Z" fill="#f43f5e"/>
+                  <circle cx="380" cy="80" r="14" fill="#f43f5e"/>
+                  <circle cx="380" cy="80" r="6" fill="#fff"/>
+                  <text x="380" y="50" fill="#fda4af" font-size="11" font-weight="700" text-anchor="middle" font-family="Plus Jakarta Sans">Destino</text>
+                </g>
+              </svg>
+              <!-- Overlay info -->
+              <div class="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
+                <div class="bg-[var(--bg)]/90 backdrop-blur-md border border-[var(--border)] rounded-xl px-3 py-2 flex items-center gap-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/></svg>
+                  <span class="text-xs font-semibold">Ruta calculada</span>
+                </div>
+                <div class="bg-[var(--bg)]/90 backdrop-blur-md border border-[var(--border)] rounded-xl px-3 py-2 flex items-center gap-3 text-xs">
+                  <span class="mono-num"><span class="font-bold text-amber-400" id="map-km">42</span> km</span>
+                  <div class="w-px h-3 bg-[var(--border)]"></div>
+                  <span class="mono-num"><span class="font-bold">58</span> min</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Estimate -->
+          <div class="card p-5 lg:p-6 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-amber-500/[0.04] to-transparent pointer-events-none"></div>
+            <div class="relative">
+              <div class="flex items-center gap-2 mb-4">
+                <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0a0a0b" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                </div>
+                <span class="display text-base font-bold">Estimación con IA</span>
+                <span class="chip chip-amber ml-auto">Claude · v4.7</span>
+              </div>
+
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                <div class="bg-[var(--surface-2)] rounded-xl p-3">
+                  <div class="text-[10px] text-[var(--text-dim)] uppercase font-bold mb-1">Distancia</div>
+                  <div class="display text-2xl font-extrabold mono-num" id="est-km">42 <span class="text-xs text-[var(--text-dim)] font-normal">km</span></div>
+                </div>
+                <div class="bg-[var(--surface-2)] rounded-xl p-3">
+                  <div class="text-[10px] text-[var(--text-dim)] uppercase font-bold mb-1">Combustible</div>
+                  <div class="display text-2xl font-extrabold mono-num" id="est-liters">4.9 <span class="text-xs text-[var(--text-dim)] font-normal">L</span></div>
+                </div>
+                <div class="bg-[var(--surface-2)] rounded-xl p-3">
+                  <div class="text-[10px] text-[var(--text-dim)] uppercase font-bold mb-1">Costo est.</div>
+                  <div class="display text-2xl font-extrabold text-amber-400 mono-num" id="est-cost">$118</div>
+                </div>
+                <div class="bg-[var(--surface-2)] rounded-xl p-3">
+                  <div class="text-[10px] text-[var(--text-dim)] uppercase font-bold mb-1">Confianza</div>
+                  <div class="display text-2xl font-extrabold text-emerald-400 mono-num">94%</div>
+                </div>
+              </div>
+
+              <div class="text-xs text-[var(--text-dim)] leading-relaxed bg-[var(--surface-2)] rounded-xl p-3 border-l-2 border-amber-400">
+                <span class="text-amber-400 font-bold">Análisis:</span> Ruta principalmente carretera federal con bajo tráfico estimado a esa hora. Vehículo TR-04 con rendimiento estable últimos 30 días (8.5 km/L). Precio gasolina Premium $24.10/L. Rango probable: <span class="font-semibold text-white mono-num">$112 — $128</span>.
+              </div>
+
+              <!-- Budget warning -->
+              <div class="mt-4 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="flex-1 text-sm">
+                  <span class="font-semibold text-emerald-400">Dentro del presupuesto.</span>
+                  <span class="text-[var(--text-dim)]"> Quedan $3,862 disponibles esta semana.</span>
+                </div>
+              </div>
+
+              <div class="flex gap-3 mt-5">
+                <button class="btn-ghost px-5 py-3 text-sm">Guardar borrador</button>
+                <button onclick="submitTrip()" class="btn-primary flex-1 px-5 py-3 text-sm">
+                  Programar viaje
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= BITÁCORA ACTIVA VIEW ============= -->
+    <section id="view-bitacora-activa" class="view hide p-5 lg:p-8 max-w-[1100px] mx-auto">
+      <div class="mb-6 slide-up">
+        <div class="text-sm text-[var(--text-dim)] mb-1">Bitácora · Viaje en curso</div>
+        <h1 class="display text-3xl lg:text-4xl font-extrabold">TR-04 → CDMX</h1>
+      </div>
+
+      <!-- Trip status hero -->
+      <div class="card p-5 lg:p-7 mb-6 relative overflow-hidden slide-up s1">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative grid md:grid-cols-3 gap-5">
+          <div>
+            <div class="text-[11px] text-[var(--text-dim)] uppercase font-bold mb-2">Estado</div>
+            <div class="flex items-center gap-2 mb-3">
+              <div class="dot dot-green"></div>
+              <span class="display text-2xl font-extrabold">En ruta</span>
+            </div>
+            <div class="text-sm text-[var(--text-dim)]">Iniciado a las <span class="text-white font-semibold">14:32</span></div>
+          </div>
+          <div>
+            <div class="text-[11px] text-[var(--text-dim)] uppercase font-bold mb-2">Progreso</div>
+            <div class="display text-3xl font-extrabold mono-num mb-2">62<span class="text-xl text-[var(--text-dim)]">%</span></div>
+            <div class="progress-bar mb-1.5">
+              <div class="progress-fill" style="width:62%; background: var(--accent);"></div>
+            </div>
+            <div class="text-xs text-[var(--text-dim)] mono-num">132 de 213 km</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-[var(--text-dim)] uppercase font-bold mb-2">ETA</div>
+            <div class="display text-3xl font-extrabold mono-num mb-2">16:10</div>
+            <div class="text-xs text-[var(--text-dim)]">en 1h 38min</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-5 mb-6">
+        <!-- Trip details -->
+        <div class="card p-5 slide-up s2">
+          <h3 class="display font-bold text-lg mb-4">Datos del viaje</h3>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between py-2 border-b border-[var(--border)]">
+              <span class="text-[var(--text-dim)]">Chofer</span>
+              <span class="font-semibold">Roberto Sánchez</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-[var(--border)]">
+              <span class="text-[var(--text-dim)]">Motivo</span>
+              <span class="font-semibold">Visita cultural</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-[var(--border)]">
+              <span class="text-[var(--text-dim)]">Pasajeros</span>
+              <span class="font-semibold mono-num">18 estudiantes</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-[var(--border)]">
+              <span class="text-[var(--text-dim)]">Km inicial</span>
+              <span class="font-semibold mono-num">142,380</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-[var(--border)]">
+              <span class="text-[var(--text-dim)]">Km actual (GPS)</span>
+              <span class="font-semibold mono-num text-amber-400">142,512</span>
+            </div>
+            <div class="flex justify-between py-2">
+              <span class="text-[var(--text-dim)]">Costo proyectado</span>
+              <span class="font-semibold mono-num">$612 MXN</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Photos -->
+        <div class="card p-5 slide-up s3">
+          <h3 class="display font-bold text-lg mb-1">Evidencia fotográfica</h3>
+          <p class="text-xs text-[var(--text-dim)] mb-4">Odómetro y estado del vehículo</p>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="photo-slot filled">
+              <div class="text-center">
+                <svg class="mx-auto mb-1" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <div class="text-[10px] font-bold text-amber-400">Inicial</div>
+              </div>
+            </div>
+            <div class="photo-slot filled">
+              <div class="text-center">
+                <svg class="mx-auto mb-1" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <div class="text-[10px] font-bold text-amber-400">Frontal</div>
+              </div>
+            </div>
+            <div class="photo-slot">
+              <div class="text-center">
+                <svg class="mx-auto mb-1" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[var(--text-faint)]"><path d="M12 5v14M5 12h14"/></svg>
+                <div class="text-[10px] text-[var(--text-faint)]">Agregar</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Close trip -->
+      <div class="card p-5 lg:p-6 slide-up s4">
+        <h3 class="display font-bold text-lg mb-4">Cerrar bitácora al llegar</h3>
+        <div class="grid sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="label">Kilometraje final</label>
+            <input type="text" class="input mono-num" placeholder="142,593">
+          </div>
+          <div>
+            <label class="label">Estado del vehículo</label>
+            <select class="select">
+              <option>✓ Sin novedades</option>
+              <option>⚠ Atención menor</option>
+              <option>✗ Reportar incidencia</option>
+            </select>
+          </div>
+        </div>
+        <label class="label">Incidencias o comentarios</label>
+        <textarea class="textarea" rows="3" placeholder="Describe cualquier eventualidad durante el viaje..."></textarea>
+        <div class="flex flex-col sm:flex-row gap-3 mt-5">
+          <button class="btn-ghost px-5 py-3 text-sm flex items-center justify-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Agregar foto final
+          </button>
+          <button onclick="showToast('Bitácora cerrada y registrada')" class="btn-success flex-1 px-5 py-3 text-sm">Cerrar bitácora</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= MANTENIMIENTO VIEW ============= -->
+    <section id="view-mantenimiento" class="view hide p-5 lg:p-8 max-w-[1400px] mx-auto">
+      <div class="flex items-center justify-between mb-6 slide-up">
+        <div>
+          <div class="text-sm text-[var(--text-dim)] mb-1">Salud y servicio</div>
+          <h1 class="display text-3xl lg:text-4xl font-extrabold">Mantenimiento</h1>
+        </div>
+        <button class="btn-primary px-4 py-2.5 text-sm hidden md:flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Agendar servicio
+        </button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex gap-6 border-b border-[var(--border)] mb-6 overflow-x-auto scrollbar-none slide-up s1">
+        <div class="tab active">Estado actual</div>
+        <div class="tab">Próximos servicios</div>
+        <div class="tab">Historial</div>
+        <div class="tab">Reportes</div>
+      </div>
+
+      <!-- Vehicle grid -->
+      <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
+
+        <!-- Vehicle card -->
+        <div class="card p-5 slide-up s1 card-hover" onclick="openModal('vehicle-detail')">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <div class="display text-2xl font-extrabold">TR-04</div>
+              <div class="text-xs text-[var(--text-dim)]">Mercedes Sprinter · 2021</div>
+            </div>
+            <div class="tl tl-green"></div>
+          </div>
+          <div class="space-y-2.5 text-sm">
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Kilometraje</span>
+              <span class="font-semibold mono-num">142,380 km</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Último servicio</span>
+              <span class="font-semibold">12 abr 2026</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Próximo en</span>
+              <span class="font-semibold text-emerald-400 mono-num">2,900 km</span>
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-[var(--border)] flex items-center justify-between">
+            <span class="chip chip-green">Operativo</span>
+            <span class="text-xs text-[var(--text-dim)]">28 viajes este mes</span>
+          </div>
+        </div>
+
+        <div class="card p-5 slide-up s2 card-hover">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <div class="display text-2xl font-extrabold">TR-07</div>
+              <div class="text-xs text-[var(--text-dim)]">Toyota Hiace · 2020</div>
+            </div>
+            <div class="tl tl-yellow"></div>
+          </div>
+          <div class="space-y-2.5 text-sm">
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Kilometraje</span>
+              <span class="font-semibold mono-num">89,210 km</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Último servicio</span>
+              <span class="font-semibold">02 mar 2026</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Próximo en</span>
+              <span class="font-semibold text-yellow-400 mono-num">800 km</span>
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-[var(--border)] flex items-center justify-between">
+            <span class="chip chip-yellow">Pronto servicio</span>
+            <span class="text-xs text-[var(--text-dim)]">22 viajes este mes</span>
+          </div>
+        </div>
+
+        <div class="card p-5 slide-up s3 card-hover">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <div class="display text-2xl font-extrabold">TR-11</div>
+              <div class="text-xs text-[var(--text-dim)]">Nissan Urvan · 2018</div>
+            </div>
+            <div class="tl tl-red"></div>
+          </div>
+          <div class="space-y-2.5 text-sm">
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Kilometraje</span>
+              <span class="font-semibold mono-num">203,540 km</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Falla reportada</span>
+              <span class="font-semibold text-rose-400">Frenos</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">En taller desde</span>
+              <span class="font-semibold">18 may</span>
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-[var(--border)] flex items-center justify-between">
+            <span class="chip chip-red">Detenido</span>
+            <span class="text-xs text-[var(--text-dim)]">0 viajes</span>
+          </div>
+        </div>
+
+        <div class="card p-5 slide-up s4 card-hover">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <div class="display text-2xl font-extrabold">TR-02</div>
+              <div class="text-xs text-[var(--text-dim)]">Ford Transit · 2022</div>
+            </div>
+            <div class="tl tl-green"></div>
+          </div>
+          <div class="space-y-2.5 text-sm">
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Kilometraje</span>
+              <span class="font-semibold mono-num">67,900 km</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Último servicio</span>
+              <span class="font-semibold">28 abr 2026</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Próximo en</span>
+              <span class="font-semibold text-emerald-400 mono-num">4,100 km</span>
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-[var(--border)] flex items-center justify-between">
+            <span class="chip chip-green">Operativo</span>
+            <span class="text-xs text-[var(--text-dim)]">31 viajes este mes</span>
+          </div>
+        </div>
+
+        <div class="card p-5 slide-up s5 card-hover">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <div class="display text-2xl font-extrabold">TR-09</div>
+              <div class="text-xs text-[var(--text-dim)]">Mercedes Sprinter · 2019</div>
+            </div>
+            <div class="tl tl-yellow"></div>
+          </div>
+          <div class="space-y-2.5 text-sm">
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Kilometraje</span>
+              <span class="font-semibold mono-num">118,440 km</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Alerta</span>
+              <span class="font-semibold text-yellow-400">Cambio de aceite</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Próximo en</span>
+              <span class="font-semibold text-yellow-400 mono-num">450 km</span>
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-[var(--border)] flex items-center justify-between">
+            <span class="chip chip-yellow">Atención</span>
+            <span class="text-xs text-[var(--text-dim)]">19 viajes este mes</span>
+          </div>
+        </div>
+
+        <div class="card p-5 slide-up s6 card-hover">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <div class="display text-2xl font-extrabold">TR-15</div>
+              <div class="text-xs text-[var(--text-dim)]">Ford Transit · 2023</div>
+            </div>
+            <div class="tl tl-green"></div>
+          </div>
+          <div class="space-y-2.5 text-sm">
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Kilometraje</span>
+              <span class="font-semibold mono-num">34,150 km</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Último servicio</span>
+              <span class="font-semibold">15 may 2026</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-dim)]">Próximo en</span>
+              <span class="font-semibold text-emerald-400 mono-num">5,850 km</span>
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-[var(--border)] flex items-center justify-between">
+            <span class="chip chip-green">Operativo</span>
+            <span class="text-xs text-[var(--text-dim)]">15 viajes este mes</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============= CALENDARIO VIEW ============= -->
+    <section id="view-calendario" class="view hide p-5 lg:p-8 max-w-[1400px] mx-auto">
+      <div class="flex items-center justify-between mb-6 slide-up">
+        <div>
+          <div class="text-sm text-[var(--text-dim)] mb-1">Programación</div>
+          <h1 class="display text-3xl lg:text-4xl font-extrabold">Mayo 2026</h1>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-ghost !p-2.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="btn-ghost px-3 text-sm">Hoy</button>
+          <button class="btn-ghost !p-2.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="flex flex-wrap items-center gap-4 mb-5 slide-up s1">
+        <span class="flex items-center gap-1.5 text-xs text-[var(--text-dim)]"><div class="w-2.5 h-2.5 rounded-sm bg-amber-400"></div>Viaje programado</span>
+        <span class="flex items-center gap-1.5 text-xs text-[var(--text-dim)]"><div class="w-2.5 h-2.5 rounded-sm bg-emerald-400"></div>Servicio</span>
+        <span class="flex items-center gap-1.5 text-xs text-[var(--text-dim)]"><div class="w-2.5 h-2.5 rounded-sm bg-rose-400"></div>Alerta</span>
+        <span class="flex items-center gap-1.5 text-xs text-[var(--text-dim)]"><div class="w-2.5 h-2.5 rounded-sm bg-blue-400"></div>Inspección</span>
+      </div>
+
+      <!-- Calendar grid -->
+      <div class="card p-3 lg:p-5 slide-up s2">
+        <!-- Day labels -->
+        <div class="grid grid-cols-7 gap-1.5 mb-2">
+          <div class="text-center text-[11px] font-bold text-[var(--text-faint)] uppercase py-2">Dom</div>
+          <div class="text-center text-[11px] font-bold text-[var(--text-faint)] uppercase py-2">Lun</div>
+          <div class="text-center text-[11px] font-bold text-[var(--text-faint)] uppercase py-2">Mar</div>
+          <div class="text-center text-[11px] font-bold text-[var(--text-faint)] uppercase py-2">Mié</div>
+          <div class="text-center text-[11px] font-bold text-[var(--text-faint)] uppercase py-2">Jue</div>
+          <div class="text-center text-[11px] font-bold text-[var(--text-faint)] uppercase py-2">Vie</div>
+          <div class="text-center text-[11px] font-bold text-[var(--text-faint)] uppercase py-2">Sáb</div>
+        </div>
+        <!-- Days -->
+        <div class="grid grid-cols-7 gap-1.5" id="calendar-grid"></div>
+      </div>
+
+      <!-- Upcoming events -->
+      <div class="mt-6 slide-up s3">
+        <h2 class="display text-xl font-bold mb-4">Próximos eventos</h2>
+        <div class="space-y-2.5">
+          <div class="card p-4 flex items-center gap-4">
+            <div class="text-center bg-[var(--surface-2)] rounded-lg px-3 py-2 shrink-0">
+              <div class="text-[10px] text-[var(--text-dim)] font-bold uppercase">May</div>
+              <div class="display text-2xl font-extrabold mono-num">22</div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm">Viaje a Universidad Anáhuac</div>
+              <div class="text-xs text-[var(--text-dim)] mono-num">08:00 · TR-04 · Roberto S. · 42 km</div>
+            </div>
+            <span class="chip chip-amber hidden sm:inline-flex">Viaje</span>
+          </div>
+          <div class="card p-4 flex items-center gap-4">
+            <div class="text-center bg-[var(--surface-2)] rounded-lg px-3 py-2 shrink-0">
+              <div class="text-[10px] text-[var(--text-dim)] font-bold uppercase">May</div>
+              <div class="display text-2xl font-extrabold mono-num">24</div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm">Servicio mayor TR-07</div>
+              <div class="text-xs text-[var(--text-dim)]">Taller Mecánica del Bajío · 09:00</div>
+            </div>
+            <span class="chip chip-green hidden sm:inline-flex">Servicio</span>
+          </div>
+          <div class="card p-4 flex items-center gap-4">
+            <div class="text-center bg-[var(--surface-2)] rounded-lg px-3 py-2 shrink-0">
+              <div class="text-[10px] text-[var(--text-dim)] font-bold uppercase">May</div>
+              <div class="display text-2xl font-extrabold mono-num">26</div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm">Inspección semestral TR-11</div>
+              <div class="text-xs text-[var(--text-dim)]">Verificación vehicular · 10:30</div>
+            </div>
+            <span class="chip chip-blue hidden sm:inline-flex">Inspección</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= EMERGENCIAS VIEW ============= -->
+    <section id="view-emergencias" class="view hide p-5 lg:p-8 max-w-[1100px] mx-auto">
+      <div class="flex items-center justify-between mb-6 slide-up">
+        <div>
+          <div class="text-sm text-[var(--text-dim)] mb-1">Solicitudes urgentes</div>
+          <h1 class="display text-3xl lg:text-4xl font-extrabold">Emergencias</h1>
+        </div>
+        <button onclick="openModal('emergency')" class="btn-danger px-4 py-2.5 text-sm flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Nueva solicitud
+        </button>
+      </div>
+
+      <!-- Budget warning -->
+      <div class="card p-5 mb-5 slide-up s1 border-amber-500/30" style="border-color: rgba(245,158,11,0.3)">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="display font-bold text-lg mb-1">Presupuesto semanal al 68%</h3>
+            <p class="text-sm text-[var(--text-dim)] mb-3">Cualquier viaje adicional que exceda los $3,980 MXN restantes debe registrarse como emergencia con justificación.</p>
+            <div class="progress-bar max-w-md">
+              <div class="progress-fill" style="width:68%; background: linear-gradient(90deg, var(--accent), #f59e0b);"></div>
+            </div>
+            <div class="text-xs text-[var(--text-dim)] mt-2 mono-num">$8,420 usados de $12,400</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active emergency -->
+      <div class="mb-5 slide-up s2">
+        <h2 class="display text-lg font-bold mb-3">Pendiente de aprobación</h2>
+        <div class="card p-5 border-rose-500/30" style="border-color: rgba(244,63,94,0.3)">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-rose-500/20 flex items-center justify-center shrink-0 pulse-r" style="animation: pulse-r 1.5s infinite">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-2 mb-2">
+                <span class="display font-bold">Traslado médico urgente</span>
+                <span class="chip chip-red">Urgente</span>
+              </div>
+              <p class="text-sm text-[var(--text-dim)] mb-3">Estudiante con fractura tras práctica deportiva. Requiere traslado a Hospital Ángeles, Querétaro. Solicitado por Carolina G. (Servicios Estudiantiles).</p>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-xs">
+                <div><div class="text-[var(--text-dim)] mb-0.5">Unidad sugerida</div><div class="font-bold mono-num">TR-02</div></div>
+                <div><div class="text-[var(--text-dim)] mb-0.5">Distancia</div><div class="font-bold mono-num">12 km</div></div>
+                <div><div class="text-[var(--text-dim)] mb-0.5">Costo est.</div><div class="font-bold mono-num">$320</div></div>
+                <div><div class="text-[var(--text-dim)] mb-0.5">Solicitado</div><div class="font-bold">hace 4 min</div></div>
+              </div>
+              <div class="flex flex-col sm:flex-row gap-3">
+                <button class="btn-ghost px-4 py-2.5 text-sm">Rechazar</button>
+                <button onclick="showToast('Emergencia aprobada')" class="btn-danger flex-1 px-4 py-2.5 text-sm">Aprobar y despachar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="slide-up s3">
+        <h2 class="display text-lg font-bold mb-3">Histórico (últimos 30 días)</h2>
+        <div class="card overflow-hidden">
+          <div class="divide-y divide-[var(--border)]">
+            <div class="p-4 flex items-center gap-4">
+              <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm">Recoger estudiantes varados</div>
+                <div class="text-[11px] text-[var(--text-dim)]">18 may · TR-04 · Aprobada por Andrés M.</div>
+              </div>
+              <span class="chip chip-green hidden sm:inline-flex">Aprobada</span>
+            </div>
+            <div class="p-4 flex items-center gap-4">
+              <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm">Traslado a clínica · Daniela R.</div>
+                <div class="text-[11px] text-[var(--text-dim)]">12 may · TR-02 · Aprobada por Andrés M.</div>
+              </div>
+              <span class="chip chip-green hidden sm:inline-flex">Aprobada</span>
+            </div>
+            <div class="p-4 flex items-center gap-4">
+              <div class="w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm">Compra de material última hora</div>
+                <div class="text-[11px] text-[var(--text-dim)]">05 may · Rechazada · No cumple criterio de urgencia</div>
+              </div>
+              <span class="chip chip-red hidden sm:inline-flex">Rechazada</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= HISTÓRICO VIEW ============= -->
+    <section id="view-historico" class="view hide p-5 lg:p-8 max-w-[1400px] mx-auto">
+      <div class="flex items-center justify-between mb-6 slide-up">
+        <div>
+          <div class="text-sm text-[var(--text-dim)] mb-1">Trazabilidad</div>
+          <h1 class="display text-3xl lg:text-4xl font-extrabold">Histórico de viajes</h1>
+        </div>
+        <button class="btn-ghost px-4 py-2.5 text-sm hidden md:flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Exportar CSV
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="card p-4 mb-5 slide-up s1">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label class="label">Unidad</label>
+            <select class="select"><option>Todas</option><option>TR-04</option><option>TR-02</option></select>
+          </div>
+          <div>
+            <label class="label">Chofer</label>
+            <select class="select"><option>Todos</option></select>
+          </div>
+          <div>
+            <label class="label">Desde</label>
+            <input type="date" class="input" value="2026-05-01">
+          </div>
+          <div>
+            <label class="label">Hasta</label>
+            <input type="date" class="input" value="2026-05-21">
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card overflow-hidden slide-up s2">
+        <!-- Desktop table -->
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-[var(--border)] text-[11px] uppercase text-[var(--text-dim)] font-bold tracking-wide">
+                <th class="text-left p-4">Fecha</th>
+                <th class="text-left p-4">Unidad</th>
+                <th class="text-left p-4">Destino</th>
+                <th class="text-left p-4">Chofer</th>
+                <th class="text-right p-4">Km</th>
+                <th class="text-right p-4">Costo</th>
+                <th class="text-left p-4">Estado</th>
+              </tr>
+            </thead>
+            <tbody class="text-sm" id="trips-table-body"></tbody>
+          </table>
+        </div>
+        <!-- Mobile cards -->
+        <div class="md:hide divide-y divide-[var(--border)]" id="trips-mobile-list"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- =============================================================== -->
+<!-- MODALS -->
+<!-- =============================================================== -->
+
+<!-- Emergency modal -->
+<div id="modal-emergency" class="hide fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md bg-black/70">
+  <div class="card modal-in w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-[var(--border)] flex items-start justify-between">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <div class="w-7 h-7 rounded-lg bg-rose-500/20 flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          </div>
+          <span class="chip chip-red">Emergencia</span>
+        </div>
+        <h2 class="display text-2xl font-extrabold">Solicitud urgente</h2>
+        <p class="text-sm text-[var(--text-dim)] mt-1">Esta solicitud excederá el presupuesto semanal</p>
+      </div>
+      <button onclick="closeModal('emergency')" class="btn-ghost !p-2 !rounded-lg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="label">Motivo de la emergencia</label>
+        <select class="select">
+          <option>Traslado médico</option>
+          <option>Estudiante varado</option>
+          <option>Cancelación de transporte público</option>
+          <option>Evento institucional imprevisto</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div>
+        <label class="label">Justificación</label>
+        <textarea class="textarea" rows="4" placeholder="Describe brevemente la situación..."></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="label">Unidad solicitada</label>
+          <select class="select">
+            <option>TR-02 (más cercana)</option>
+            <option>TR-04</option>
+            <option>TR-09</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Costo estimado</label>
+          <input type="text" class="input mono-num" value="$320 MXN" readonly>
+        </div>
+      </div>
+      <div class="p-3 rounded-xl bg-rose-500/5 border border-rose-500/20 text-xs text-[var(--text-dim)]">
+        ⚠ Las solicitudes de emergencia requieren aprobación de coordinación y quedan registradas con tu identidad y timestamp.
+      </div>
+    </div>
+    <div class="p-6 border-t border-[var(--border)] flex gap-3">
+      <button onclick="closeModal('emergency')" class="btn-ghost px-5 py-3 text-sm">Cancelar</button>
+      <button onclick="closeModal('emergency'); showToast('Solicitud enviada · Esperando aprobación')" class="btn-danger flex-1 px-5 py-3 text-sm">Enviar solicitud</button>
+    </div>
+  </div>
+</div>
+
+<!-- Vehicle detail modal -->
+<div id="modal-vehicle-detail" class="hide fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md bg-black/70">
+  <div class="card modal-in w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-[var(--border)] flex items-start justify-between">
+      <div>
+        <div class="flex items-center gap-3 mb-1">
+          <span class="display text-3xl font-extrabold">TR-04</span>
+          <div class="tl tl-green"></div>
+          <span class="chip chip-green">Operativo</span>
+        </div>
+        <p class="text-sm text-[var(--text-dim)]">Mercedes Sprinter · 2021 · Placa: QRO-2841</p>
+      </div>
+      <button onclick="closeModal('vehicle-detail')" class="btn-ghost !p-2 !rounded-lg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-6 space-y-5">
+      <!-- Stats -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-[var(--surface-2)] rounded-xl p-3">
+          <div class="text-[10px] text-[var(--text-dim)] uppercase font-bold mb-1">Km totales</div>
+          <div class="display text-xl font-extrabold mono-num">142,380</div>
+        </div>
+        <div class="bg-[var(--surface-2)] rounded-xl p-3">
+          <div class="text-[10px] text-[var(--text-dim)] uppercase font-bold mb-1">Rendimiento</div>
+          <div class="display text-xl font-extrabold mono-num">8.5 <span class="text-xs text-[var(--text-dim)] font-normal">km/L</span></div>
+        </div>
+        <div class="bg-[var(--surface-2)] rounded-xl p-3">
+          <div class="text-[10px] text-[var(--text-dim)] uppercase font-bold mb-1">Viajes mes</div>
+          <div class="display text-xl font-extrabold mono-num">28</div>
+        </div>
+        <div class="bg-[var(--surface-2)] rounded-xl p-3">
+          <div class="text-[10px] text-[var(--text-dim)] uppercase font-bold mb-1">Costo/km</div>
+          <div class="display text-xl font-extrabold mono-num">$2.84</div>
+        </div>
+      </div>
+
+      <!-- Health system -->
+      <div>
+        <h3 class="font-bold text-sm mb-3">Sistemas del vehículo</h3>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-2)]">
+            <span class="text-sm">Motor</span><div class="flex items-center gap-2"><div class="dot dot-green"></div><span class="text-xs text-emerald-400 font-semibold">Óptimo</span></div>
+          </div>
+          <div class="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-2)]">
+            <span class="text-sm">Frenos</span><div class="flex items-center gap-2"><div class="dot dot-green"></div><span class="text-xs text-emerald-400 font-semibold">Óptimo</span></div>
+          </div>
+          <div class="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-2)]">
+            <span class="text-sm">Llantas</span><div class="flex items-center gap-2"><div class="dot dot-yellow"></div><span class="text-xs text-yellow-400 font-semibold">Revisión pronto</span></div>
+          </div>
+          <div class="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-2)]">
+            <span class="text-sm">Aceite</span><div class="flex items-center gap-2"><div class="dot dot-green"></div><span class="text-xs text-emerald-400 font-semibold">Óptimo</span></div>
+          </div>
+          <div class="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-2)]">
+            <span class="text-sm">Batería</span><div class="flex items-center gap-2"><div class="dot dot-green"></div><span class="text-xs text-emerald-400 font-semibold">Óptimo</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="p-6 border-t border-[var(--border)] flex gap-3">
+      <button onclick="closeModal('vehicle-detail')" class="btn-ghost px-5 py-3 text-sm flex-1">Cerrar</button>
+      <button class="btn-primary px-5 py-3 text-sm flex-1">Agendar servicio</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR Camera modal -->
+<div id="modal-qr-camera" class="hide fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md bg-black/70">
+  <div class="card modal-in w-full max-w-md">
+    <div class="p-5 border-b border-[var(--border)] flex items-center justify-between">
+      <div>
+        <h2 class="display text-xl font-bold">Escanear código</h2>
+        <p class="text-xs text-[var(--text-dim)] mt-0.5">Apunta la cámara al QR o código de barras del estudiante</p>
+      </div>
+      <button onclick="stopCamera()" class="btn-ghost !p-2 !rounded-lg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-5">
+      <div id="qr-reader" class="w-full rounded-xl overflow-hidden" style="min-height: 280px;"></div>
+      <p class="text-xs text-[var(--text-dim)] text-center mt-3">Se cierra automáticamente al detectar un código</p>
+    </div>
+    <div class="p-5 border-t border-[var(--border)]">
+      <button onclick="stopCamera()" class="btn-ghost w-full py-3 text-sm">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 items-center"></div>
+
+<script>
+  // ─── CONFIG ────────────────────────────────────────────────────────
+  const API_BASE = 'http://localhost:5020';
+
+  // ─── API SERVICE ───────────────────────────────────────────────────
+  const api = {
+    async get(path) {
+      const res = await fetch(API_BASE + path);
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.json();
+    },
+    async post(path, body) {
+      const res = await fetch(API_BASE + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.json();
+    }
+  };
+
+  // ─── STATE ─────────────────────────────────────────────────────────
+  let scannedStudents = [];
+  let cameraScanner = null;
+  let vehicleEfficiency = {};
+
+  // ─── NAVIGATION ────────────────────────────────────────────────────
+  function navTo(view) {
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hide'));
+    document.getElementById('view-' + view).classList.remove('hide');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelector(`.nav-item[data-view="${view}"]`)?.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.innerWidth < 1024) toggleSidebar(true);
+    if (view === 'nuevo-viaje') { loadCamiones(); loadChoferes(); focusScanInput(); }
+    if (view === 'historico') loadTripsHistory();
+  }
+
+  function toggleSidebar(forceClose = false) {
+    const sb = document.querySelector('.sidebar');
+    const ov = document.getElementById('sidebar-overlay');
+    if (forceClose) { sb.classList.remove('open'); ov.classList.add('hide'); return; }
+    sb.classList.toggle('open');
+    ov.classList.toggle('hide');
+  }
+
+  // ─── LOGIN ─────────────────────────────────────────────────────────
+  function enterApp() {
+    const ls = document.getElementById('login-screen');
+    ls.style.transition = 'opacity 0.4s ease';
+    ls.style.opacity = '0';
+    setTimeout(() => {
+      ls.classList.add('hide');
+      document.getElementById('app').classList.remove('hide');
+      loadCamiones();
+      loadChoferes();
+    }, 400);
+  }
+
+  // ─── MODALS ────────────────────────────────────────────────────────
+  function openModal(name) {
+    document.getElementById('modal-' + name).classList.remove('hide');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(name) {
+    if (name === 'qr-camera') { stopCamera(); return; }
+    document.getElementById('modal-' + name).classList.add('hide');
+    document.body.style.overflow = '';
+  }
+  document.querySelectorAll('[id^="modal-"]').forEach(m => {
+    m.addEventListener('click', e => {
+      if (e.target !== m) return;
+      if (m.id === 'modal-qr-camera') { stopCamera(); return; }
+      m.classList.add('hide');
+      document.body.style.overflow = '';
+    });
+  });
+
+  // ─── TOAST ─────────────────────────────────────────────────────────
+  function showToast(msg, type = 'success') {
+    const colors = { success: '#4ade80', error: '#f43f5e', info: '#60a5fa' };
+    const c = colors[type] || colors.success;
+    const t = document.createElement('div');
+    t.className = 'toast bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3 max-w-sm';
+    t.innerHTML = `<div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style="background:${c}22"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span class="text-sm font-medium">${msg}</span>`;
+    document.getElementById('toast-container').appendChild(t);
+    setTimeout(() => { t.style.transition = 'opacity 0.3s,transform 0.3s'; t.style.opacity = '0'; t.style.transform = 'translateY(20px)'; }, 3000);
+    setTimeout(() => t.remove(), 3400);
+  }
+
+  // ─── LOAD CAMIONES ─────────────────────────────────────────────────
+  async function loadCamiones() {
+    try {
+      const data = await api.get('/api/camiones');
+      const sel = document.getElementById('trip-vehicle');
+      vehicleEfficiency = {};
+      sel.innerHTML = data.map(c => {
+        const id = c.id ?? c._id ?? c.numero;
+        const rend = c.rendimiento ?? c.kmPorLitro ?? 8.5;
+        vehicleEfficiency[id] = rend;
+        return `<option value="${id}">${c.numero ?? c.placa} · ${c.modelo ?? c.nombre} (rinde ${rend} km/L)</option>`;
+      }).join('');
+      updateEstimate();
+    } catch(e) {
+      console.warn('loadCamiones:', e.message);
+    }
+  }
+
+  // ─── LOAD CHOFERES ─────────────────────────────────────────────────
+  async function loadChoferes() {
+    try {
+      const data = await api.get('/api/choferes');
+      const sel = document.getElementById('trip-driver');
+      sel.innerHTML = data.map(c => {
+        const id = c.id ?? c._id;
+        return `<option value="${id}">${c.nombre}</option>`;
+      }).join('');
+    } catch(e) {
+      console.warn('loadChoferes:', e.message);
+    }
+  }
+
+  // ─── LOAD TRIPS HISTORY ────────────────────────────────────────────
+  async function loadTripsHistory() {
+    try {
+      const data = await api.get('/api/viajes');
+      renderTripsTable(data);
+    } catch(e) {
+      console.warn('loadTripsHistory:', e.message);
+      buildTrips(); // fallback mock
+    }
+  }
+
+  function renderTripsTable(data) {
+    const statusMap = { completado: 'green', en_curso: 'blue', incidencia: 'yellow', cancelado: 'red' };
+    const rows = data.map(t => {
+      const chip = statusMap[t.estado?.toLowerCase?.().replace(' ','_')] ?? 'neutral';
+      const fecha = t.fechaSalida ? new Date(t.fechaSalida).toLocaleDateString('es-MX', { day:'2-digit', month:'short' }) : '—';
+      const km = t.kmRecorridos ?? t.distanciaKm ?? '—';
+      const costo = t.costoReal ?? t.costoEstimado ?? '—';
+      return { date: fecha, vehicle: t.camion?.numero ?? t.camionId ?? '—', dest: t.destino ?? '—',
+               driver: t.chofer?.nombre ?? t.choferId ?? '—', km, cost: costo, status: t.estado ?? '—', chip };
+    });
+    _renderRows(rows);
+  }
+
+  // ─── AI ESTIMATE (mock basado en datos reales de vehículo) ─────────
+  function updateEstimate() {
+    const dest = document.getElementById('trip-destination').value;
+    const vehicleId = document.getElementById('trip-vehicle').value;
+    const km = Math.max(15, Math.min(280, dest.length * 3 + Math.floor(Math.random() * 20)));
+    const eff = vehicleEfficiency[vehicleId] ?? 8.5;
+    const liters = (km / eff).toFixed(1);
+    const cost = Math.round(liters * 24.10);
+    document.getElementById('est-km').innerHTML = km + ' <span class="text-xs text-[var(--text-dim)] font-normal">km</span>';
+    document.getElementById('est-liters').innerHTML = liters + ' <span class="text-xs text-[var(--text-dim)] font-normal">L</span>';
+    document.getElementById('est-cost').textContent = '$' + cost;
+    document.getElementById('map-km').textContent = km;
+  }
+
+  // ─── SCANNER ───────────────────────────────────────────────────────
+  function focusScanInput() {
+    setTimeout(() => document.getElementById('scan-input')?.focus(), 300);
+  }
+
+  function onScanInput(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = document.getElementById('scan-input').value.trim();
+      if (val) scanStudent(val);
+    }
+  }
+
+  async function scanStudent(numControl) {
+    const clean = numControl.trim().toUpperCase();
+    if (!clean) return;
+    if (scannedStudents.find(s => (s.numeroControl ?? s.numControl ?? '').toUpperCase() === clean)) {
+      showToast('El estudiante ya está registrado en este viaje', 'info');
+      document.getElementById('scan-input').value = '';
+      return;
+    }
+    document.getElementById('scan-input').value = '';
+    hideScanError();
+    try {
+      const student = await api.get(`/api/estudiantes/${clean}`);
+      scannedStudents.push(student);
+      renderScannedStudents();
+      const nombre = student.nombre ?? student.nombreCompleto ?? clean;
+      showToast(`${nombre} registrado`);
+    } catch(e) {
+      showScanError(`No se encontró el número de control: ${clean}`);
+    }
+  }
+
+  function removeStudent(index) {
+    scannedStudents.splice(index, 1);
+    renderScannedStudents();
+  }
+
+  function renderScannedStudents() {
+    const list = document.getElementById('scanned-list');
+    document.getElementById('scanned-count').textContent = scannedStudents.length;
+    if (!scannedStudents.length) {
+      list.innerHTML = '<div class="text-center py-5 text-[var(--text-faint)] text-xs">Sin pasajeros registrados aún</div>';
+      return;
+    }
+    list.innerHTML = scannedStudents.map((s, i) => {
+      const nombre = s.nombre ?? s.nombreCompleto ?? 'Estudiante';
+      const nc = s.numeroControl ?? s.numControl ?? s._id ?? '';
+      const carrera = s.carrera ?? s.programa ?? '';
+      return `
+      <div class="flex items-center gap-3 p-2.5 rounded-xl bg-[var(--surface-2)]">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-[#0a0a0b] font-bold text-xs shrink-0">${nombre.charAt(0)}</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold truncate">${nombre}</div>
+          <div class="text-[11px] text-[var(--text-dim)] mono-num truncate">${nc}${carrera ? ' · ' + carrera : ''}</div>
+        </div>
+        <button onclick="removeStudent(${i})" class="text-[var(--text-faint)] hover:text-rose-400 transition p-1 shrink-0">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>`;
+    }).join('');
+  }
+
+  function showScanError(msg) {
+    const el = document.getElementById('scan-error');
+    el.textContent = msg;
+    el.classList.remove('hide');
+    setTimeout(hideScanError, 4000);
+  }
+  function hideScanError() {
+    document.getElementById('scan-error')?.classList.add('hide');
+  }
+
+  // ─── CAMERA SCANNER ────────────────────────────────────────────────
+  async function startCamera() {
+    if (!window.Html5Qrcode) { showToast('Librería de cámara no disponible', 'error'); return; }
+    document.getElementById('modal-qr-camera').classList.remove('hide');
+    document.body.style.overflow = 'hidden';
+    cameraScanner = new window.Html5Qrcode('qr-reader');
+    try {
+      await cameraScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 240, height: 240 } },
+        async (decoded) => { await stopCamera(); scanStudent(decoded); },
+        () => {}
+      );
+    } catch(e) {
+      cameraScanner = null;
+      document.getElementById('modal-qr-camera').classList.add('hide');
+      document.body.style.overflow = '';
+      showToast('No se pudo acceder a la cámara', 'error');
+    }
+  }
+
+  async function stopCamera() {
+    if (cameraScanner) {
+      try { await cameraScanner.stop(); } catch(e) {}
+      cameraScanner = null;
+    }
+    document.getElementById('modal-qr-camera').classList.add('hide');
+    document.body.style.overflow = '';
+  }
+
+  // ─── SUBMIT TRIP ───────────────────────────────────────────────────
+  async function submitTrip() {
+    const idVehiculo = document.getElementById('trip-vehicle').value;
+    const idUsuario = document.getElementById('trip-driver').value;
+    const destino = document.getElementById('trip-destination').value.trim();
+    const motivo = document.getElementById('trip-reason').value;
+    const fecha = document.getElementById('trip-date').value;
+    const hora = document.getElementById('trip-time').value;
+    const notas = document.getElementById('trip-notes').value.trim();
+
+    if (!idVehiculo || !destino) {
+      showToast('Selecciona unidad y destino', 'error');
+      return;
+    }
+
+    const btn = document.querySelector('[onclick="submitTrip()"]');
+    const original = btn.textContent;
+    btn.textContent = 'Guardando...';
+    btn.disabled = true;
+
+    const payload = {
+      idVehiculo,
+      idUsuario,
+      destino,
+      motivo,
+      fechaSalida: `${fecha}T${hora}:00`,
+      notas,
+      pasajeros: scannedStudents.map(s => s.numeroControl ?? s.numControl ?? s._id ?? s.id)
+    };
+
+    try {
+      await api.post('/api/bitacoras', payload);
+      showToast('Viaje programado correctamente');
+      scannedStudents = [];
+      renderScannedStudents();
+      navTo('dashboard');
+    } catch(e) {
+      showToast('Error al guardar el viaje: ' + e.message, 'error');
+    } finally {
+      btn.textContent = original;
+      btn.disabled = false;
+    }
+  }
+
+  // ─── CALENDAR ──────────────────────────────────────────────────────
+  function buildCalendar() {
+    const grid = document.getElementById('calendar-grid');
+    const startDay = 5;
+    const daysInMonth = 31;
+    const events = {
+      5:[{color:'amber'}],8:[{color:'amber'},{color:'amber'}],12:[{color:'green'}],
+      15:[{color:'amber'}],18:[{color:'red'}],21:[{color:'amber'},{color:'amber'}],
+      22:[{color:'amber'}],24:[{color:'green'}],26:[{color:'blue'}],28:[{color:'amber'}]
+    };
+    let html = '';
+    for (let i = 0; i < startDay; i++)
+      html += `<div class="cal-cell other-month"><div class="text-xs text-[var(--text-faint)]">${30-startDay+i+1}</div></div>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const isToday = d === 21;
+      const evs = events[d] || [];
+      const colorMap = {amber:'bg-amber-400',green:'bg-emerald-400',red:'bg-rose-400',blue:'bg-blue-400'};
+      const dots = evs.slice(0,3).map(e=>`<div class="w-1.5 h-1.5 rounded-full ${colorMap[e.color]}"></div>`).join('');
+      html += `<div class="cal-cell ${isToday?'today':''} ${evs.length?'has-event':''}">
+        <div class="text-xs font-bold ${isToday?'text-amber-400':''} mono-num">${d}</div>
+        <div class="flex gap-1 mt-auto">${dots}</div></div>`;
+    }
+    grid.innerHTML = html;
+  }
+
+  // ─── TRIPS TABLE (mock fallback) ───────────────────────────────────
+  const MOCK_TRIPS = [
+    {date:'21 may',vehicle:'TR-04',dest:'CDMX',driver:'Roberto S.',km:213,cost:612,status:'En curso',chip:'blue'},
+    {date:'21 may',vehicle:'TR-02',dest:'San Juan del Río',driver:'Laura M.',km:78,cost:198,status:'En curso',chip:'blue'},
+    {date:'20 may',vehicle:'TR-09',dest:'Bernal',driver:'Carlos H.',km:58,cost:156,status:'Completado',chip:'green'},
+    {date:'20 may',vehicle:'TR-04',dest:'Tequisquiapan',driver:'Ana L.',km:86,cost:224,status:'Completado',chip:'green'},
+    {date:'19 may',vehicle:'TR-15',dest:'Querétaro Centro',driver:'Roberto S.',km:22,cost:62,status:'Completado',chip:'green'},
+    {date:'19 may',vehicle:'TR-02',dest:'Aeropuerto QRO',driver:'Laura M.',km:34,cost:92,status:'Completado',chip:'green'},
+    {date:'18 may',vehicle:'TR-07',dest:'Cadereyta',driver:'Carlos H.',km:65,cost:152,status:'Completado',chip:'green'},
+    {date:'18 may',vehicle:'TR-04',dest:'Toluca',driver:'Ana L.',km:168,cost:478,status:'Completado',chip:'green'},
+    {date:'17 may',vehicle:'TR-15',dest:'Pedro Escobedo',driver:'Roberto S.',km:42,cost:112,status:'Completado',chip:'green'},
+    {date:'17 may',vehicle:'TR-09',dest:'Amealco',driver:'Carlos H.',km:95,cost:268,status:'Incidencia',chip:'yellow'},
+  ];
+
+  function buildTrips() { _renderRows(MOCK_TRIPS); }
+
+  function _renderRows(rows) {
+    document.getElementById('trips-table-body').innerHTML = rows.map(t => `
+      <tr class="border-b border-[var(--border)] hover:bg-[var(--surface-2)] transition cursor-pointer">
+        <td class="p-4 text-[var(--text-dim)] mono-num">${t.date}</td>
+        <td class="p-4 font-semibold">${t.vehicle}</td>
+        <td class="p-4">${t.dest}</td>
+        <td class="p-4 text-[var(--text-dim)]">${t.driver}</td>
+        <td class="p-4 text-right mono-num">${t.km}</td>
+        <td class="p-4 text-right font-semibold mono-num">${typeof t.cost === 'number' ? '$'+t.cost : t.cost}</td>
+        <td class="p-4"><span class="chip chip-${t.chip}">${t.status}</span></td>
+      </tr>`).join('');
+    document.getElementById('trips-mobile-list').innerHTML = rows.map(t => `
+      <div class="p-4 hover:bg-[var(--surface-2)] transition">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="font-bold">${t.vehicle}</span>
+            <span class="text-xs text-[var(--text-dim)] mono-num">${t.date}</span>
+          </div>
+          <span class="chip chip-${t.chip}">${t.status}</span>
+        </div>
+        <div class="text-sm mb-1">${t.dest}</div>
+        <div class="flex items-center justify-between text-xs text-[var(--text-dim)]">
+          <span>${t.driver}</span>
+          <span class="mono-num">${t.km} km · ${typeof t.cost === 'number' ? '$'+t.cost : t.cost}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  // ─── INIT ──────────────────────────────────────────────────────────
+  buildCalendar();
+  buildTrips();
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      stopCamera();
+      document.querySelectorAll('[id^="modal-"]:not(#modal-qr-camera)').forEach(m => {
+        m.classList.add('hide');
+      });
+      document.body.style.overflow = '';
+    }
+  });
+</script>
+
+</body>
+</html>

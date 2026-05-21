@@ -35,7 +35,9 @@ namespace ControlVeicular.API.Controllers
                 KmFinal = b.KmFinal,
                 Destino = b.Destino,
                 Motivo = b.Motivo,
-                EvidenciaUrl = b.EvidenciaUrl
+                EvidenciaUrl = b.EvidenciaUrl,
+                Notas = b.Notas,
+                Pasajeros = b.Pasajeros
             });
 
             return Ok(response);
@@ -54,7 +56,9 @@ namespace ControlVeicular.API.Controllers
                 KmFinal = bitacoraDto.KmFinal,
                 Destino = bitacoraDto.Destino,
                 Motivo = bitacoraDto.Motivo,
-                EvidenciaUrl = bitacoraDto.EvidenciaUrl
+                EvidenciaUrl = bitacoraDto.EvidenciaUrl,
+                Notas = bitacoraDto.Notas,
+                Pasajeros = bitacoraDto.Pasajeros
             };
 
             await _bitacorasCollection.InsertOneAsync(nuevaBitacora);
@@ -70,7 +74,9 @@ namespace ControlVeicular.API.Controllers
                 KmFinal = nuevaBitacora.KmFinal,
                 Destino = nuevaBitacora.Destino,
                 Motivo = nuevaBitacora.Motivo,
-                EvidenciaUrl = nuevaBitacora.EvidenciaUrl
+                EvidenciaUrl = nuevaBitacora.EvidenciaUrl,
+                Notas = nuevaBitacora.Notas,
+                Pasajeros = nuevaBitacora.Pasajeros
             };
 
             return CreatedAtAction(nameof(GetBitacoras), new { id = nuevaBitacora.IdBitacora }, responseDto);

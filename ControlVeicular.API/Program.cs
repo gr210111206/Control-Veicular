@@ -49,8 +49,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Habilitar CORS para permitir peticiones desde el frontend
 app.UseCors("AllowAll");
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseAuthorization();
 app.MapControllers();
