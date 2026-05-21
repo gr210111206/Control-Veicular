@@ -14,7 +14,7 @@ namespace ControlVeicular.API.DTOs
 
     public class VehiculoResponseDTO
     {
-        public int Id { get; set; }
+        public string? Id { get; set; }
         public string NumeroUnidad { get; set; } = string.Empty;
         public string? Marca { get; set; }
         public string? Modelo { get; set; }

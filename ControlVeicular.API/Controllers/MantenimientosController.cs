@@ -1,8 +1,7 @@
-using ControlVeicular.API.Data;
 using ControlVeicular.API.DTOs;
 using ControlVeicular.API.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace ControlVeicular.API.Controllers
 {
@@ -10,31 +9,32 @@ namespace ControlVeicular.API.Controllers
     [ApiController]
     public class MantenimientosController : ControllerBase
     {
-        private readonly SicvContext _context;
+        private readonly IMongoCollection<Mantenimiento> _mantenimientosCollection;
 
-        public MantenimientosController(SicvContext context)
+        public MantenimientosController(IMongoDatabase mongoDatabase)
         {
-            _context = context;
+            _mantenimientosCollection = mongoDatabase.GetCollection<Mantenimiento>("Mantenimientos");
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MantenimientoResponseDTO>>> GetMantenimientos([FromQuery] int skip = 0, [FromQuery] int limit = 100)
         {
-            var mantenimientos = await _context.Mantenimientos
+            var mantenimientos = await _mantenimientosCollection.Find(_ => true)
                 .Skip(skip)
-                .Take(limit)
-                .Select(m => new MantenimientoResponseDTO
-                {
-                    IdMantenimiento = m.IdMantenimiento,
-                    IdVehiculo = m.IdVehiculo,
-                    TipoServicio = m.TipoServicio,
-                    KmRealizado = m.KmRealizado,
-                    KmProximoServicio = m.KmProximoServicio,
-                    Estado = m.Estado
-                })
+                .Limit(limit)
                 .ToListAsync();
 
-            return Ok(mantenimientos);
+            var response = mantenimientos.Select(m => new MantenimientoResponseDTO
+            {
+                IdMantenimiento = m.IdMantenimiento,
+                IdVehiculo = m.IdVehiculo,
+                TipoServicio = m.TipoServicio,
+                KmRealizado = m.KmRealizado,
+                KmProximoServicio = m.KmProximoServicio,
+                Estado = m.Estado
+            });
+
+            return Ok(response);
         }
 
         [HttpPost]
@@ -49,8 +49,7 @@ namespace ControlVeicular.API.Controllers
                 Estado = mantenimientoDto.Estado
             };
 
-            _context.Mantenimientos.Add(nuevoMantenimiento);
-            await _context.SaveChangesAsync();
+            await _mantenimientosCollection.InsertOneAsync(nuevoMantenimiento);
 
             var responseDto = new MantenimientoResponseDTO
             {

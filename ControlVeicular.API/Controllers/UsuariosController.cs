@@ -1,8 +1,7 @@
-using ControlVeicular.API.Data;
 using ControlVeicular.API.DTOs;
 using ControlVeicular.API.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace ControlVeicular.API.Controllers
 {
@@ -10,37 +9,39 @@ namespace ControlVeicular.API.Controllers
     [ApiController]
     public class UsuariosController : ControllerBase
     {
-        private readonly SicvContext _context;
+        private readonly IMongoCollection<Usuario> _usuariosCollection;
 
-        public UsuariosController(SicvContext context)
+        public UsuariosController(IMongoDatabase mongoDatabase)
         {
-            _context = context;
+            _usuariosCollection = mongoDatabase.GetCollection<Usuario>("Usuarios");
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UsuarioResponseDTO>>> GetUsuarios([FromQuery] int skip = 0, [FromQuery] int limit = 100)
         {
-            var usuarios = await _context.Usuarios
+            var usuarios = await _usuariosCollection.Find(_ => true)
                 .Skip(skip)
-                .Take(limit)
-                .Select(u => new UsuarioResponseDTO
-                {
-                    Id = u.Id,
-                    Nombre = u.Nombre,
-                    Apellidos = u.Apellidos,
-                    Email = u.Email,
-                    Rol = u.Rol,
-                    NumeroEmpleado = u.NumeroEmpleado
-                })
+                .Limit(limit)
                 .ToListAsync();
 
-            return Ok(usuarios);
+            var response = usuarios.Select(u => new UsuarioResponseDTO
+            {
+                Id = u.Id,
+                Nombre = u.Nombre,
+                Apellidos = u.Apellidos,
+                Email = u.Email,
+                Rol = u.Rol,
+                NumeroEmpleado = u.NumeroEmpleado
+            });
+
+            return Ok(response);
         }
 
         [HttpPost]
         public async Task<ActionResult<UsuarioResponseDTO>> PostUsuario(UsuarioCreateDTO usuarioDto)
         {
-            if (await _context.Usuarios.AnyAsync(u => u.Email == usuarioDto.Email))
+            var existingUser = await _usuariosCollection.Find(u => u.Email == usuarioDto.Email).FirstOrDefaultAsync();
+            if (existingUser != null)
             {
                 return BadRequest(new { detail = "El email ya está registrado" });
             }
@@ -50,13 +51,12 @@ namespace ControlVeicular.API.Controllers
                 Nombre = usuarioDto.Nombre,
                 Apellidos = usuarioDto.Apellidos,
                 Email = usuarioDto.Email,
-                PasswordHash = usuarioDto.Password, // Simple mapping, in a real app hash it
+                PasswordHash = usuarioDto.Password,
                 Rol = usuarioDto.Rol,
                 NumeroEmpleado = usuarioDto.NumeroEmpleado
             };
 
-            _context.Usuarios.Add(nuevoUsuario);
-            await _context.SaveChangesAsync();
+            await _usuariosCollection.InsertOneAsync(nuevoUsuario);
 
             var responseDto = new UsuarioResponseDTO
             {

@@ -1,8 +1,7 @@
-using ControlVeicular.API.Data;
 using ControlVeicular.API.DTOs;
 using ControlVeicular.API.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace ControlVeicular.API.Controllers
 {
@@ -10,35 +9,36 @@ namespace ControlVeicular.API.Controllers
     [ApiController]
     public class BitacorasController : ControllerBase
     {
-        private readonly SicvContext _context;
+        private readonly IMongoCollection<Bitacora> _bitacorasCollection;
 
-        public BitacorasController(SicvContext context)
+        public BitacorasController(IMongoDatabase mongoDatabase)
         {
-            _context = context;
+            _bitacorasCollection = mongoDatabase.GetCollection<Bitacora>("Bitacoras");
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BitacoraResponseDTO>>> GetBitacoras([FromQuery] int skip = 0, [FromQuery] int limit = 100)
         {
-            var bitacoras = await _context.Bitacoras
+            var bitacoras = await _bitacorasCollection.Find(_ => true)
                 .Skip(skip)
-                .Take(limit)
-                .Select(b => new BitacoraResponseDTO
-                {
-                    IdBitacora = b.IdBitacora,
-                    IdVehiculo = b.IdVehiculo,
-                    IdUsuario = b.IdUsuario,
-                    FechaSalida = b.FechaSalida,
-                    FechaRetorno = b.FechaRetorno,
-                    KmInicial = b.KmInicial,
-                    KmFinal = b.KmFinal,
-                    Destino = b.Destino,
-                    Motivo = b.Motivo,
-                    EvidenciaUrl = b.EvidenciaUrl
-                })
+                .Limit(limit)
                 .ToListAsync();
 
-            return Ok(bitacoras);
+            var response = bitacoras.Select(b => new BitacoraResponseDTO
+            {
+                IdBitacora = b.IdBitacora,
+                IdVehiculo = b.IdVehiculo,
+                IdUsuario = b.IdUsuario,
+                FechaSalida = b.FechaSalida,
+                FechaRetorno = b.FechaRetorno,
+                KmInicial = b.KmInicial,
+                KmFinal = b.KmFinal,
+                Destino = b.Destino,
+                Motivo = b.Motivo,
+                EvidenciaUrl = b.EvidenciaUrl
+            });
+
+            return Ok(response);
         }
 
         [HttpPost]
@@ -57,8 +57,7 @@ namespace ControlVeicular.API.Controllers
                 EvidenciaUrl = bitacoraDto.EvidenciaUrl
             };
 
-            _context.Bitacoras.Add(nuevaBitacora);
-            await _context.SaveChangesAsync();
+            await _bitacorasCollection.InsertOneAsync(nuevaBitacora);
 
             var responseDto = new BitacoraResponseDTO
             {

@@ -1,33 +1,20 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace ControlVeicular.API.Models
 {
-    [Table("Mantenimientos")]
     public class Mantenimiento
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("id_mantenimiento")]
-        public int IdMantenimiento { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? IdMantenimiento { get; set; }
 
-        [Required]
-        [Column("id_vehiculo")]
-        public int IdVehiculo { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string IdVehiculo { get; set; } = string.Empty;
 
-        [MaxLength(100)]
-        [Column("tipo_servicio")]
         public string? TipoServicio { get; set; }
-
-        [Column("km_realizado")]
         public int? KmRealizado { get; set; }
-
-        [Column("km_proximo_servicio")]
         public int? KmProximoServicio { get; set; }
-
         public string? Estado { get; set; } = "Pendiente";
-
-        [ForeignKey("IdVehiculo")]
-        public virtual Vehiculo? Vehiculo { get; set; }
     }
 }

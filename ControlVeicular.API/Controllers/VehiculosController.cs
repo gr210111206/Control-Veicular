@@ -1,8 +1,7 @@
-using ControlVeicular.API.Data;
 using ControlVeicular.API.DTOs;
 using ControlVeicular.API.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace ControlVeicular.API.Controllers
 {
@@ -10,40 +9,42 @@ namespace ControlVeicular.API.Controllers
     [ApiController]
     public class VehiculosController : ControllerBase
     {
-        private readonly SicvContext _context;
+        private readonly IMongoCollection<Vehiculo> _vehiculosCollection;
 
-        public VehiculosController(SicvContext context)
+        public VehiculosController(IMongoDatabase mongoDatabase)
         {
-            _context = context;
+            _vehiculosCollection = mongoDatabase.GetCollection<Vehiculo>("Vehiculos");
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<VehiculoResponseDTO>>> GetVehiculos([FromQuery] int skip = 0, [FromQuery] int limit = 100)
         {
-            var vehiculos = await _context.Vehiculos
+            var vehiculos = await _vehiculosCollection.Find(_ => true)
                 .Skip(skip)
-                .Take(limit)
-                .Select(v => new VehiculoResponseDTO
-                {
-                    Id = v.Id,
-                    NumeroUnidad = v.NumeroUnidad,
-                    Marca = v.Marca,
-                    Modelo = v.Modelo,
-                    Anio = v.Anio,
-                    Placas = v.Placas,
-                    KilometrajeActual = v.KilometrajeActual,
-                    Estado = v.Estado,
-                    RendimientoKmL = v.RendimientoKmL
-                })
+                .Limit(limit)
                 .ToListAsync();
 
-            return Ok(vehiculos);
+            var response = vehiculos.Select(v => new VehiculoResponseDTO
+            {
+                Id = v.Id,
+                NumeroUnidad = v.NumeroUnidad,
+                Marca = v.Marca,
+                Modelo = v.Modelo,
+                Anio = v.Anio,
+                Placas = v.Placas,
+                KilometrajeActual = v.KilometrajeActual,
+                Estado = v.Estado,
+                RendimientoKmL = v.RendimientoKmL
+            });
+
+            return Ok(response);
         }
 
         [HttpPost]
         public async Task<ActionResult<VehiculoResponseDTO>> PostVehiculo(VehiculoCreateDTO vehiculoDto)
         {
-            if (await _context.Vehiculos.AnyAsync(v => v.Placas == vehiculoDto.Placas))
+            var existingVehiculo = await _vehiculosCollection.Find(v => v.Placas == vehiculoDto.Placas).FirstOrDefaultAsync();
+            if (existingVehiculo != null)
             {
                 return BadRequest(new { detail = "Las placas ya están registradas" });
             }
@@ -60,8 +61,7 @@ namespace ControlVeicular.API.Controllers
                 RendimientoKmL = vehiculoDto.RendimientoKmL
             };
 
-            _context.Vehiculos.Add(nuevoVehiculo);
-            await _context.SaveChangesAsync();
+            await _vehiculosCollection.InsertOneAsync(nuevoVehiculo);
 
             var responseDto = new VehiculoResponseDTO
             {

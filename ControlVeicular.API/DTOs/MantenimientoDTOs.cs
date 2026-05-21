@@ -2,7 +2,7 @@ namespace ControlVeicular.API.DTOs
 {
     public class MantenimientoCreateDTO
     {
-        public int IdVehiculo { get; set; }
+        public string IdVehiculo { get; set; } = string.Empty;
         public string? TipoServicio { get; set; }
         public int? KmRealizado { get; set; }
         public int? KmProximoServicio { get; set; }
@@ -11,8 +11,8 @@ namespace ControlVeicular.API.DTOs
 
     public class MantenimientoResponseDTO
     {
-        public int IdMantenimiento { get; set; }
-        public int IdVehiculo { get; set; }
+        public string? IdMantenimiento { get; set; }
+        public string IdVehiculo { get; set; } = string.Empty;
         public string? TipoServicio { get; set; }
         public int? KmRealizado { get; set; }
         public int? KmProximoServicio { get; set; }
